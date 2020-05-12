@@ -1,0 +1,54 @@
+- name: Create container
+  hosts: localhost
+  gather_facts: no
+  become: true
+  tasks:
+    - name: pull image
+      docker_image:
+        name: treasureboat/ssh
+        source: pull
+
+    - name: build image
+      docker_container: 
+        name: centos_ssh
+        image: treasureboat/ssh
+        state: started
+        ports: 
+          - "22"
+
+    - name: check container
+      wait_for:
+        host: 172.17.0.2
+        port: 22
+  tags: docker
+
+- name: Provision HTTP server
+  hosts: containers
+  gather_facts: no
+  pre_tasks:
+    - name: Install python
+      raw: "yum install -y python"
+  tasks:
+    - name: Install apache packages 
+      yum:
+        name: httpd
+        state: present
+
+    - name: Ensure httpd is running
+      service:
+        name: httpd
+        state: started
+
+    - name: Copy index.html
+      copy:
+        src: ./public/index.html
+        dest: /var/www/html/index.html
+      tags: update
+
+    - name: Restart httpd service
+      service:
+        name: httpd
+        state: restarted
+      tags: update
+
+  tags: provision

@@ -1,2 +1,2 @@
 [containers]
-172.17.0.2 ansible_user=root
+172.17.0.2 ansible_user=root ansible_password=123456
